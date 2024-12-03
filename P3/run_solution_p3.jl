@@ -11,4 +11,3 @@ input_data = "test_input.txt" #testcase
 data = p3a_functions.load_data(input_data)
 println("the result from instructions is:",p3a_functions.main(data))
 #the result from instructions is:161
-159892596
