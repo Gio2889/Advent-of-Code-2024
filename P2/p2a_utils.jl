@@ -33,11 +33,19 @@ function monotic(data)
     end
 end
 
-function is_safe(data)
-    deltas = cal_delta.(data)
-    are_mono = monotic.(deltas)
-    safe_deltas = is_delta_safe.(deltas)
+function is_safe(data) #broadcast not pass
+    deltas = cal_delta(data)
+    are_mono = monotic(deltas)
+    safe_deltas = is_delta_safe(deltas)
     safe = are_mono .& safe_deltas #and combination of bool arrays
-    return sum(safe)
+    return safe
 end
+
+function main(input_data)
+    data = load_data(input_data)
+    total = sum(is_safe.(data))
+    return total
+    
+end
+
 end
