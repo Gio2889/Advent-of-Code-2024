@@ -94,3 +94,4 @@ end
 
 floor_plan = load_as_matrix("test_input.txt")
 run_guard_route_with_path_tracking(floor_plan)
+
