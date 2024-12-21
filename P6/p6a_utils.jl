@@ -10,7 +10,6 @@ end
 function position_counts(grid)
     rows, cols = size(grid) 
     position_counts = 0
-    directions = collect(product([-1, 1], [-1, 1]))
     rot_mtrx = [0 1; -1 0 ]
     steps = 0
     function search_from(ci, cj, di, dj, idx)
@@ -24,7 +23,7 @@ function position_counts(grid)
         ni, nj = ci + di, cj + dj
         #println("on step: ", idx,"  ","position ", (ci,cj)," direction: ", (di,dj), " grid value ",grid[ci, cj] )
         if ni < 1 || ni > rows || nj < 1 || nj > cols # out of bound we return the number of steps
-            return steps
+            return true
         end
         #println(" next value ",grid[ni, nj])
         if grid[ni, nj] == '#' #obstacle found

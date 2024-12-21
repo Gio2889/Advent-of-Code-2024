@@ -34,11 +34,13 @@ end
 function rearrange_block(blocks,map)
     disk_block = copy(blocks)
     #println(disk_block)
-    free_spaces = [ parse(Int,item[2]) for item in map]
-    sizes = [ parse(Int,item[1]) for item in map]
+    iter_map =  copy(map)
     println(free_spaces)
-    for i in reverse(sizes)
+    for pair in reverse(map)
+        size  = pair[1]
+        pop!(iter_map) #remove the last element
         
+    end
 
     number_of_empty_spaces = length(filter(x-> x=='.',blocks))
     #println("empty spaces ",number_of_empty_spaces)
