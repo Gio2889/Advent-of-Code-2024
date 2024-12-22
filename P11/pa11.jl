@@ -29,7 +29,7 @@ function process_rocks(rocks, n)
     new_rocks = rocks  # Local variable within the function
     for i in 1:n
         new_rocks = apply_rules(new_rocks)
-        println("Length is $(length(new_rocks))")
+        println("iter $(i) with length $(length(new_rocks))")
         #println(new_rocks)
     end
 end
