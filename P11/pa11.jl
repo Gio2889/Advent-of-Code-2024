@@ -35,4 +35,4 @@ function process_rocks(rocks, n)
 end
 
 # Call the function with the necessary inputs
-process_rocks(split_string, 75)
+process_rocks(split_string, 25)
