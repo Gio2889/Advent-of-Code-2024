@@ -94,13 +94,13 @@ end
 
 #for actual problem
 input = "input.txt"
-# pos,vel = extract_position_and_velocities(input)
+pos,vel = extract_position_and_velocities(input)
 # count_bot_in_quadrants(pos,vel,103,101,100)
 
 ##for part b
-function check_for_easter_egg()
+function check_for_easter_egg(rows,cols)
     for i in 1:3000
-        matrix = display_matrix(pos,vel,103,101,i)
+        matrix = display_matrix(pos,vel,rows,cols,i)
         matrix = Matrix{Any}(matrix)
         row_sums = vec(sum(matrix, dims=2))
         col_sums = vec(sum(matrix, dims=1))
@@ -112,5 +112,5 @@ function check_for_easter_egg()
     end    
 end
 
-check_for_easter_egg()
+check_for_easter_egg(103,101)
 #CSV.write("matrix.csv", DataFrame(matrix, :auto)) 
