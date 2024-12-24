@@ -104,7 +104,7 @@ function check_for_easter_egg()
         matrix = Matrix{Any}(matrix)
         row_sums = vec(sum(matrix, dims=2))
         col_sums = vec(sum(matrix, dims=1))
-        if any(x -> x > cols, row_sums) || any(x -> x > rows, col_sums)
+        if any(x -> x >= cols, row_sums) || any(x -> x >= rows, col_sums)
             prinln("East Egg found after $i seconds")  
             matrix[matrix .== 0] .= '.'
             display(heatmap(matrix, color=:grays))
