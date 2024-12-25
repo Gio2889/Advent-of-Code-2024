@@ -1,6 +1,7 @@
 using CSV
 using DataFrames
 using Plots
+using Base.Threads
 cd(@__DIR__)
 
 function extract_position_and_velocities(filepath)
@@ -60,17 +61,31 @@ function built_grid(rows,cols,pos)
     return matrix 
 end
 
-function display_matrix(pos,vel,rows,cols,n)
-    mtrx = zeros(Int,rows,cols)
+# changed for parallel version for part 2
+# function display_matrix(pos,vel,rows,cols,n)
+#     mtrx = zeros(Int,rows,cols)
+#     for i in 1:n
+#         new_pos = move_bots(pos,vel,rows,cols,1)
+#         mtrx = built_grid(rows,cols,new_pos)
+#         # if i == n
+#         #     display(mtrx)
+#         # end
+#     end
+#     return mtrx    
+# end
+
+function display_matrix(pos, vel, rows, cols, n)
+    local_pos = deepcopy(pos)  # Each thread gets its own copy of `pos`
+    local_vel = deepcopy(vel)  # Each thread gets its own copy of `vel`
+    mtrx = zeros(Int, rows, cols)
+
     for i in 1:n
-        new_pos = move_bots(pos,vel,rows,cols,1)
-        mtrx = built_grid(rows,cols,new_pos)
-        # if i == n
-        #     display(mtrx)
-        # end
+        new_pos = move_bots(local_pos, local_vel, rows, cols, 1)
+        mtrx = built_grid(rows, cols, new_pos)
     end
     return mtrx    
 end
+
 
 function count_bot_in_quadrants(pos,vel,rows,cols,n)
     matrix = display_matrix(pos,vel,rows,cols,n)
@@ -97,20 +112,68 @@ input = "input.txt"
 pos,vel = extract_position_and_velocities(input)
 # count_bot_in_quadrants(pos,vel,103,101,100)
 
+
 ##for part b
-function check_for_easter_egg(rows,cols)
-    for i in 1:3000
+
+function check_for_easter_egg_serial(rows,cols)
+    good_matrices = []
+    for i in 1:100
         matrix = display_matrix(pos,vel,rows,cols,i)
         matrix = Matrix{Any}(matrix)
         row_sums = vec(sum(matrix, dims=2))
         col_sums = vec(sum(matrix, dims=1))
-        if any(x -> x >= cols, row_sums) || any(x -> x >= rows, col_sums)
-            prinln("East Egg found after $i seconds")  
-            matrix[matrix .== 0] .= '.'
-            display(heatmap(matrix, color=:grays))
+        if any(x -> x >= 30, row_sums) || any(x -> x >= 30, col_sums)
+            println("$i")
+            push!(good_matrices,matrix)
+            #   
         end
-    end    
+        #end
+          
+    end
+    println("serial version found $(length(good_matrices)) setups")
+    for matrx in good_matrices
+        display(heatmap(matrx, color=:grays))
+    end
 end
 
-check_for_easter_egg(103,101)
-#CSV.write("matrix.csv", DataFrame(matrix, :auto)) 
+function check_for_easter_egg_parallel(rows, cols, pos, vel)
+    println("Number of available threads: ", Threads.nthreads())
+
+    #thread_results = [Vector{Matrix{Any}}() for _ in 1:Threads.nthreads()]
+    thread_results = [Dict{Int, Matrix{Int}}() for _ in 1:Threads.nthreads()]
+    Threads.@threads for i in 1:5000
+        matrix = display_matrix(pos, vel, rows, cols, i)
+        #println("Thread $(threadid()) - Generated matrix for i=$i")
+        row_sums = vec(sum(matrix, dims=2))
+        col_sums = vec(sum(matrix, dims=1))
+        if any(x -> x >= 30, row_sums) || any(x -> x >= 30, col_sums)
+            #println(i)
+            # println("Thread $(threadid()) - Found valid matrix for i=$i")
+            #push!(thread_results[threadid()], matrix)
+            thread_id = threadid()
+            thread_results[thread_id][i] = matrix
+        end
+    end
+
+    # good_matrices = vcat(thread_results...)
+    # println("$(length(good_matrices)) setups found")
+    # for matrx in good_matrices
+    #     display(heatmap(matrx, color=:grays))
+    # end
+
+    good_matrices = Dict()
+    for thread_dict in thread_results
+        merge!(good_matrices, thread_dict) 
+    end
+
+    println("parallel version found $(length(good_matrices)) setups")
+    for (i, matrx) in good_matrices
+        display(heatmap(matrx, color=:grays, title="Matrix for i=$i"))
+    end
+end
+
+
+
+#check_for_easter_egg_serial(103,101)
+println("--------------------------------")
+check_for_easter_egg_parallel(103,101,pos,vel)
