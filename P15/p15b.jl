@@ -1,4 +1,5 @@
 cd(@__DIR__)
+
 function load_as_matrix(file_name)
     lines = readlines(file_name)
     char_matrix = reduce(vcat, permutedims.(collect.(lines)))
@@ -90,7 +91,7 @@ function get_gps_coord(map)
     result  = 0
     for i in 1:rows
         for j in 1:cols
-            if map[i,j] == 'O'
+            if map[i,j] == '[' && map[i,j] == ']'
                 k = i-1
                 l= j - 1
             result += (100*k)+l 
@@ -100,11 +101,32 @@ function get_gps_coord(map)
     return result
 end
 
-# map = "test_map2.txt"
-# input = "test_input2.txt"
-map = "map.txt"
-input = "input.txt"
+function map_resizer(matrix::Matrix{Char})
+    # Convert to Matrix{Any}
+    resized_matrix = Matrix{Vector{Char}}(undef, size(matrix)...)
+
+    for i in 1:size(matrix, 1)  # Iterate over rows
+        for j in 1:size(matrix, 2)  # Iterate over columns
+            if matrix[i, j] == '@'
+                resized_matrix[i, j] = ['@', '.']
+            elseif matrix[i, j] == 'O'
+                resized_matrix[i, j] = ['[', ']']
+            elseif matrix[i, j] == '.'
+                resized_matrix[i, j] = ['.', '.']
+            elseif matrix[i, j] == '#'
+                resized_matrix[i, j] = ['#', '#']
+            end
+        end
+    end
+    return resized_matrix
+end
+map = "test_map2.txt"
+input = "test_input2.txt"
+# map = "map.txt"
+# input = "input.txt"
 map = load_as_matrix(map)
-evolve_map = robot_setup(map,input)
-display(evolve_map)
-println("sum of gps coord: ", get_gps_coord(evolve_map))
+map = map_reziser(map)
+print(map)
+# evolve_map = robot_setup(map,input)
+# display(evolve_map)
+# println("sum of gps coord: ", get_gps_coord(evolve_map))
