@@ -78,12 +78,12 @@ function display_matrix(pos, vel, rows, cols, n)
     local_pos = deepcopy(pos)  # Each thread gets its own copy of `pos`
     local_vel = deepcopy(vel)  # Each thread gets its own copy of `vel`
     mtrx = zeros(Int, rows, cols)
-
+    new_pos =Dict()
     for i in 1:n
         new_pos = move_bots(local_pos, local_vel, rows, cols, 1)
         mtrx = built_grid(rows, cols, new_pos)
     end
-    return mtrx    
+    return mtrx,new_pos    
 end
 
 
@@ -117,26 +117,29 @@ pos,vel = extract_position_and_velocities(input)
 
 function check_for_easter_egg_serial(rows,cols)
     good_matrices = []
-    for i in 1:100
-        matrix = display_matrix(pos,vel,rows,cols,i)
+    old_pos = pos
+    for i in 1:10000
+        matrix,temp_pos = display_matrix(old_pos,vel,rows,cols,1) #only iterate eaach second  
         matrix = Matrix{Any}(matrix)
         row_sums = vec(sum(matrix, dims=2))
         col_sums = vec(sum(matrix, dims=1))
         if any(x -> x >= 30, row_sums) || any(x -> x >= 30, col_sums)
-            println("$i")
+            #println("$i")
             push!(good_matrices,matrix)
             #   
         end
+        old_pos = temp_pos #save the curent position for next iteraation
         #end
           
     end
     println("serial version found $(length(good_matrices)) setups")
     for matrx in good_matrices
-        display(heatmap(matrx, color=:grays))
+        display(heatmap(matrx, color=:grays, title="Matrix for i=$i"))
     end
 end
 
 function check_for_easter_egg_parallel(rows, cols, pos, vel)
+    #If you for some reason want to do every time evolution separate you can use this parallel version
     println("Number of available threads: ", Threads.nthreads())
 
     #thread_results = [Vector{Matrix{Any}}() for _ in 1:Threads.nthreads()]
@@ -173,7 +176,7 @@ function check_for_easter_egg_parallel(rows, cols, pos, vel)
 end
 
 
-
-#check_for_easter_egg_serial(103,101)
 println("--------------------------------")
-check_for_easter_egg_parallel(103,101,pos,vel)
+check_for_easter_egg_serial(103,101)
+println("--------------------------------")
+#check_for_easter_egg_parallel(103,101,pos,vel)
