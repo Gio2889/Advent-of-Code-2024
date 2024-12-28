@@ -1,4 +1,5 @@
 using DataStructures  # For PriorityQueue
+
 cd(@__DIR__)
 function load_as_matrix(file_name)
     lines = readlines(file_name)
@@ -25,14 +26,15 @@ function aStar(g_matrix::Matrix{Int}, start_node::Tuple{Int, Int}, end_node::Tup
     # Priority queue to hold nodes to explore
     open_set = PriorityQueue{Tuple{Int, Int}, Float64}()
     enqueue!(open_set, start_node => 0.0)
+    println("open_set is $open_set")
 
     # Dictionaries to track costs and paths
     cost_so_far = Dict(start_node => 0.0)
     came_from = Dict{Tuple{Int, Int}, Tuple{Int, Int}}()
 
     while !isempty(open_set)
-        curr_node, _ = dequeue!(open_set)
-
+        curr_node = dequeue!(open_set)
+        println("curr_node is $curr_node")
         if curr_node == end_node
             return rebuild_path(curr_node, came_from)  # Goal reached, return path
         end
@@ -41,8 +43,9 @@ function aStar(g_matrix::Matrix{Int}, start_node::Tuple{Int, Int}, end_node::Tup
         for neighbor in [(curr_node[1] + dx, curr_node[2] + dy) for (dx, dy) in [(1, 0), (-1, 0), (0, 1), (0, -1)]]
             # Check if neighbor is within bounds
             if neighbor[1] > 0 && neighbor[2] > 0 && neighbor[1] <= size(g_matrix, 1) && neighbor[2] <= size(g_matrix, 2)
-                new_cost = cost_so_far[curr_node] + g_matrix[neighbor[1], neighbor[2]]
-                
+                println("neighbhor is within bounds")
+                new_cost = cost_so_far[curr_node] + 1 #g_matrix[neighbor[1], neighbor[2]]
+                println("new cost is $new_cost")
                 if !(neighbor in cost_so_far) || new_cost < cost_so_far[neighbor]
                     cost_so_far[neighbor] = new_cost
                     priority = new_cost + cost_function(neighbor, end_node)
@@ -58,7 +61,7 @@ end
 
 
 function get_g_matrix(maze_map)
-    rows,cols = sixe(maze_map)
+    rows,cols = size(maze_map)
     index_map = Dict()
     current_index = 1
     for i in 1:rows, j in 1:cols
@@ -87,11 +90,14 @@ function get_g_matrix(maze_map)
             end
         end
     end
+    return adj_matrix
 end
 
 function maze_solver(maze_map)
-    rows,cols = sixe(maze_map)
+    rows,cols = size(maze_map)
     g_mtrx = get_g_matrix(maze_map)
+    display(typeof(g_mtrx))
+    display(g_mtrx)
     start_node = (0,0)
     end_node = (0,0)
     for i in 1:rows
@@ -106,7 +112,7 @@ function maze_solver(maze_map)
     if start_node == (0,0) || end_node == (0,0)
         return nothing #bad setup
     end
-
+    println("Starting nodes $start_node, $end_node")
     return aStar(g_mtrx,start_node,end_node)
 end
 
