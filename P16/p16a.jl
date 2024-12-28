@@ -1,7 +1,13 @@
 using DataStructures  # For PriorityQueue
+cd(@__DIR__)
+function load_as_matrix(file_name)
+    lines = readlines(file_name)
+    char_matrix = reduce(vcat, permutedims.(collect.(lines)))
+    return char_matrix
+end
 
 function aStar(g_matrix::Matrix{Int}, start_node::Tuple{Int, Int}, end_node::Tuple{Int, Int})
-    # Heuristic function (Manhattan distance)
+    # Heuristic function (Manhattan distance) ONLY FOR TESTING
     function cost_function(node::Tuple{Int, Int}, goal::Tuple{Int, Int})
         return abs(node[1] - goal[1]) + abs(node[2] - goal[2])
     end
@@ -49,3 +55,61 @@ function aStar(g_matrix::Matrix{Int}, start_node::Tuple{Int, Int}, end_node::Tup
 
     return nothing  # No path found
 end
+
+
+function get_g_matrix(maze_map)
+    rows,cols = sixe(maze_map)
+    index_map = Dict()
+    current_index = 1
+    for i in 1:rows, j in 1:cols
+        if maze[i][j] in ['.', 'S', 'E']
+            index_map[(i, j)] = current_index
+            current_index += 1
+        end
+    end
+    num_nodes = length(index_map)
+
+    # Initialize the adjacency matrix
+    adj_matrix = zeros(Int, num_nodes, num_nodes)
+
+    # Function to check valid neighbors
+    function get_neighbors(i, j)
+        return [(i-1, j), (i+1, j), (i, j-1), (i, j+1)]  # Up, Down, Left, Right
+    end
+
+    # Build the adjacency matrix
+    for (cell, idx) in index_map
+        i, j = cell
+        for neighbor in get_neighbors(i, j)
+            if haskey(index_map, neighbor)
+                neighbor_idx = index_map[neighbor]
+                adj_matrix[idx, neighbor_idx] = 1
+            end
+        end
+    end
+end
+
+function maze_solver(maze_map)
+    rows,cols = sixe(maze_map)
+    g_mtrx = get_g_matrix(maze_map)
+    start_node = (0,0)
+    end_node = (0,0)
+    for i in 1:rows
+        for j in 1:cols
+            if maze_map[i,j] == 'S'
+                start_node = (i,j)
+            elseif maze_map[i,j] == 'E'
+                end_node = (i,j)
+            end
+        end
+    end
+    if start_node == (0,0) || end_node == (0,0)
+        return nothing #bad setup
+    end
+
+    return aStar(g_mtrx,start_node,end_node)
+end
+
+input = "test_input.txt"
+map = load_as_matrix(input)
+maze_solver(map)
