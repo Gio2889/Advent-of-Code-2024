@@ -84,16 +84,36 @@ def make_adj_matrix_and_g_dict(grid):
         graph[(r, c)] = neighbors
     #print(f"graph is {graph}")
     return graph
+
+
 # Define A* function
 def astar(g: dict, start_node: tuple[int, int], goal_node: tuple[int, int]) -> list | None:
     open_set = [(0, start_node,"RIGHT")]
     came_from = {}
     came_from_with_dir = {}
     cost_so_far = {start_node: 0}
+    priority_so_far = {}
 
     # A commonly used heuristic for maze-solving is the Manhattan distance
     def heuristic(node: tuple[int, int], goal: tuple[int, int]):
         return abs(node[0] - goal[0]) + abs(node[1] - goal[1])
+
+    def custom_heuristic(node, goal, curr_dir, prev_node):
+        # Calculate Manhattan distance
+        manhattan_distance = abs(node[0] - goal[0]) + abs(node[1] - goal[1])
+        
+        # Calculate turn penalty
+        if prev_node:
+            new_direction = get_direction(prev_node, node)
+            turn_penalty = 10 if new_direction != curr_dir else 0
+        else:
+            turn_penalty = 0  # No penalty for the first step
+
+        # Add a small bias to straight-line paths
+        straight_line_bias = -0.5 if curr_dir else 0
+
+        # Combine heuristic components
+        return manhattan_distance + turn_penalty + straight_line_bias
 
     def get_direction(prev, curr):
         dr, dc = curr[0] - prev[0], curr[1] - prev[1]
@@ -111,37 +131,43 @@ def astar(g: dict, start_node: tuple[int, int], goal_node: tuple[int, int]) -> l
         return p[::-1],curr_cost
 
     while len(open_set) > 0:
-        #print(f"open set is {open_set}")
-        #print(f"cost so far is: {cost_so_far}")
-        #print(f"came from is {came_from}")
+        print(f"open set is {open_set}")
+        print(f"cost so far is: {cost_so_far}")
+        print(f"priority so far {priority_so_far}")
+        print(f"came from is {came_from}")
         curr_cost, curr_node, curr_dir = heappop(open_set)
-        #print(f"curr_node & curr_cost are {curr_node} & {curr_cost}")
+        print(f"curr_node & curr_cost are {curr_node} & {curr_cost}")
         if curr_node == goal_node:
             print("end found")
             goal_path = rebuild_path(goal_node)
             return goal_path
 
         for neighbor in g[curr_node]:
-            #print(f"neighbor is {neighbor}")
+            print(f"neighbor is {neighbor}")
             new_direction = get_direction(curr_node, neighbor)
-            #print(f"new direction is {new_direction}")
+            print(f"new direction is {new_direction}")
+            if len(g[curr_node])>2 and curr_dir != new_direction:
+                print(f"early turn on {neighbor}")
+                early_turn_cost = 1000
+            else:
+                early_turn_cost = 0    
             if curr_dir != new_direction:
                 direction_penalty = 1001
             else:
                 direction_penalty = 1
-            new_cost = cost_so_far.get(curr_node) + direction_penalty
+            new_cost = cost_so_far.get(curr_node) + direction_penalty + early_turn_cost
             #new_cost = cost_so_far.get(curr_node) + 1
-            #print(f"new cost is {new_cost}")
+            print(f"new cost is {new_cost}")
             if neighbor not in cost_so_far or new_cost < cost_so_far[neighbor]:
                 #print("cost is lower; upating")
-                cost_so_far[neighbor] = new_cost
-                #print(f"hueristic is {heuristic(neighbor, goal_node)}")
-                priority = new_cost + heuristic(neighbor, goal_node)
                 
-                #print(f"upating priority {priority}")
-                heappush(open_set, (priority, neighbor,new_direction))
+                #print(f"hueristic is {heuristic(neighbor, goal_node)}")
+                # priority = new_cost #+ heuristic(neighbor, goal_node) #
+                # priority_so_far[neighbor] = priority
+                # print(f"upating priority {priority}")
+                cost_so_far[neighbor] = new_cost
+                heappush(open_set, (new_cost, neighbor,new_direction))
                 came_from[neighbor] = curr_node
-
     return None
 
 
